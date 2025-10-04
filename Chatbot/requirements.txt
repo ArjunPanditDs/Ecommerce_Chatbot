@@ -4,4 +4,4 @@ pandas
 scikit-learn
 sentence-transformers
 textblob
-spellchecker
+pyspellchecker
