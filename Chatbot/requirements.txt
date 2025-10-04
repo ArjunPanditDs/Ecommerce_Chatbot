@@ -1,0 +1,6 @@
+streamlit
+numpy
+pandas
+scikit-learn
+sentence-transformers
+flask  # optional if you still want API

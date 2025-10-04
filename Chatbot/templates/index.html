@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce Chatbot 🤖</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-box">
+            <div class="chat-header">🤖 FAQ Chatbot</div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Type a message...">
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+$(document).ready(function() {
+    const chatBox = $("#chat-messages");
+    let botBusy = false;
+
+    function addMessage(sender, message, isBot=false) {
+        let msgClass = isBot ? "bot-msg" : "user-msg";
+        const timestamp = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        let msgHTML = `
+            <div class="${msgClass}">
+                <div class="msg-content">
+                    <span>${message}</span>
+                    <div class="msg-time">${timestamp}</div>
+                </div>
+            </div>
+        `;
+        chatBox.append(msgHTML);
+        chatBox.stop().animate({ scrollTop: chatBox[0].scrollHeight }, 500);
+    }
+
+    function getGreeting() {
+        const hour = new Date().getHours();
+        if(hour < 12) return "Good morning! ☀️ How can I help you today?";
+        else if(hour < 18) return "Good afternoon! 🌤 How can I help you today?";
+        else return "Good evening! 🌙 How can I help you today?";
+    }
+
+    addMessage("Bot", getGreeting(), true);
+
+    function botReply(msg) {
+        botBusy = true;
+        $("#send-btn, #user-input").prop("disabled", true);
+        chatBox.append(`<div class="bot-msg typing" id="typing-indicator"><div class="msg-content">Bot is typing...</div></div>`);
+        chatBox.stop().animate({ scrollTop: chatBox[0].scrollHeight }, 500);
+
+        setTimeout(function() {
+            $("#typing-indicator").remove();
+            $.post("/get", {msg: msg}, function(data) {
+                addMessage("Bot", data.reply, true);
+                botBusy = false;
+                $("#send-btn, #user-input").prop("disabled", false);
+                $("#user-input").focus(); // cursor auto-focus after bot reply
+            });
+        }, 800);
+    }
+
+    function sendMessage() {
+        if(botBusy) return;
+        let msg = $("#user-input").val().trim();
+        if(!msg) return;
+        addMessage("You", msg);
+        $("#user-input").val("");
+        $("#user-input").focus(); // cursor back to input
+        botReply(msg);
+    }
+
+    $("#send-btn").click(sendMessage);
+    $("#user-input").keypress(function(e) {
+        if(e.which == 13) sendMessage();
+    });
+
+    // Optional: focus input box on page load
+    $("#user-input").focus();
+});
+</script>
+</body>
+</html>
