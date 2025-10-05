@@ -12,7 +12,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(BASE_DIR, "data", "faq_with_intent.csv")
 
-st.set_page_config(page_title="E-commerce Chatbot 🤖", layout="wide")
+st.set_page_config(page_title="E-commerce Chatbot 🤖", layout="centered")
 
 # ----------------------------
 # --- Session State ---
@@ -90,83 +90,61 @@ def get_chatbot_reply(user_input):
     return "Hmm 🤔 I’m not sure about that. Could you rephrase it?"
 
 # ----------------------------
-# --- Chat UI ---
+# --- Chat UI (native components + light theming) ---
 # ----------------------------
-st.markdown("""
-<style>
-body {
-    background: linear-gradient(135deg, #6e8efb, #a777e3);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-}
-.chat-box {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: 20px;
-    max-height: 70vh;
-    overflow-y: auto;
-}
-.user-msg {
-    text-align: right;
-    margin-bottom: 10px;
-}
-.bot-msg {
-    text-align: left;
-    margin-bottom: 10px;
-}
-.msg-content {
-    display: inline-block;
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 70%;
-}
-.user-msg .msg-content {
-    background: linear-gradient(135deg, #00ff6a, #00c3ff);
-    color: white;
-}
-.bot-msg .msg-content {
-    background: rgba(255, 255, 255, 0.85);
-    color: black;
-}
-</style>
-""", unsafe_allow_html=True)
 
-st.title("🤖 E-commerce FAQ Chatbot")
+# Minimal, safe CSS: gradient page background and subtle content card
+st.markdown(
+    """
+    <style>
+      .stApp {
+        background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+      }
+      .block-container {
+        background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.10));
+        border-radius: 18px;
+        padding: 2rem 2rem 1rem 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-chat_container = st.container()
+st.markdown("<h1 style='text-align:center; color:#ffffff;'>🤖 E-commerce Assistant</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#e6e6e6;'>Always here to help you! 💫</p>", unsafe_allow_html=True)
 
-# Add first greeting if empty
+st.divider()
+
+# Seed with greeting if empty
 if not st.session_state.messages:
     st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
 
-# Display chat messages
-with chat_container:
-    st.markdown("<div class='chat-box'>", unsafe_allow_html=True)
-    for msg in st.session_state.messages:
-        if msg["sender"] == "user":
-            st.markdown(
-                f"<div class='user-msg'><div class='msg-content'>{msg['text']}</div></div>",
-                unsafe_allow_html=True)
-        else:
-            st.markdown(
-                f"<div class='bot-msg'><div class='msg-content'>{msg['text']}</div></div>",
-                unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+# Render chat messages with Streamlit chat components
+for msg in st.session_state.messages:
+    if msg.get("sender") == "user":
+        with st.chat_message("user", avatar="👤"):
+            st.write(msg.get("text", ""))
+    else:
+        with st.chat_message("assistant", avatar="🛍️"):
+            st.write(msg.get("text", ""))
 
-# ----------------------------
-# --- Input Form ---
-# ----------------------------
-with st.form(key="chat_form", clear_on_submit=True):
-    user_input_temp = st.text_input("Type your message here...")
-    submit_btn = st.form_submit_button("Send")
+# Quick replies
+st.write("**Quick questions:**")
+quick_replies = ["Return policy", "Shipping", "Discounts", "Payments", "Track order"]
+cols = st.columns(len(quick_replies))
+for i, label in enumerate(quick_replies):
+    if cols[i].button(label, use_container_width=True, key=f"quick_{i}"):
+        st.session_state.messages.append({"sender": "user", "text": label})
+        bot_text = get_chatbot_reply(label)
+        st.session_state.messages.append({"sender": "bot", "text": bot_text})
+        st.rerun()
 
-if submit_btn and user_input_temp.strip():
-    # Append user message
-    st.session_state.messages.append({"sender": "user", "text": user_input_temp})
-    
-    # Get bot reply
-    reply = get_chatbot_reply(user_input_temp)
-    st.session_state.messages.append({"sender": "bot", "text": reply})
+st.divider()
 
-# ✅ No experimental_rerun, input is cleared automatically with clear_on_submit
-# ✅ Model failures handled safely
+# Enter-to-send with native chat input
+if prompt := st.chat_input("Type your message..."):
+    st.session_state.messages.append({"sender": "user", "text": prompt})
+    response_text = get_chatbot_reply(prompt)
+    st.session_state.messages.append({"sender": "bot", "text": response_text})
+    st.rerun()
