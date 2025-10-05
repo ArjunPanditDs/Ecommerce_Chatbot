@@ -1,7 +1,9 @@
-Flask
-numpy
 pandas
+numpy
 scikit-learn
 sentence-transformers
-textblob
-pyspellchecker
+flask
+streamlit
+tqdm
+torch
+transformers

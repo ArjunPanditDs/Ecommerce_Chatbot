@@ -1,29 +1,71 @@
-from flask import Flask, request, jsonify, render_template
+import streamlit as st
+from datetime import datetime
+from utils import clean_text, greeting_response, business_response
 from models import load_data, load_model_and_embeddings
 from chatbot_core import chatbot_response
-from utils import clean_text, greeting_response, business_response
-from datetime import datetime
+import pandas as pd
 import traceback
 import os
-import pandas as pd
 
+# --- Load Model & Data ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(BASE_DIR, "data", "faq_with_intent.csv")
-# df = pd.read_csv(file_path)
 
+st.set_page_config(page_title="E-commerce Chatbot 🤖", layout="centered")
 
-app = Flask(__name__)
+st.markdown("""
+<style>
+body {
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+.chat-box {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 20px;
+}
+.user-msg {
+    text-align: right;
+    margin-bottom: 10px;
+}
+.bot-msg {
+    text-align: left;
+    margin-bottom: 10px;
+}
+.msg-content {
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 80%;
+}
+.user-msg .msg-content {
+    background: linear-gradient(135deg, #00ff6a, #00c3ff);
+    color: white;
+}
+.bot-msg .msg-content {
+    background: rgba(255, 255, 255, 0.85);
+    color: black;
+}
+</style>
+""", unsafe_allow_html=True)
 
-print("⚙️ Initializing Chatbot System...")
+st.title("🤖 E-commerce FAQ Chatbot")
+
+# --- Initialize Chatbot ---
+st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
 try:
     df = load_data(file_path)
     model, question_embeddings = load_model_and_embeddings(df)
-    print("✅ Model and FAQ embeddings loaded successfully!")
+    st.success("✅ Model loaded successfully!")
 except Exception as e:
-    print("❌ Error while loading model/data:")
+    st.error("❌ Failed to load model or data!")
     traceback.print_exc()
     df, model, question_embeddings = None, None, None
 
+# --- Session State for chat history ---
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 def get_time_greeting():
     hour = datetime.now().hour
@@ -35,7 +77,6 @@ def get_time_greeting():
         return "Good evening! 🌙 What can I assist you with?"
     else:
         return "Hello there! 🌙 Burning the midnight oil, huh?"
-
 
 def get_chatbot_reply(user_input):
     if not model or df is None:
@@ -57,26 +98,34 @@ def get_chatbot_reply(user_input):
 
     return "Hmm 🤔 I’m not sure about that. Could you rephrase it?"
 
+# --- Chat Interface ---
+st.markdown("<div class='chat-box'>", unsafe_allow_html=True)
 
-@app.route("/")
-def home():
+# Display existing messages
+for msg in st.session_state.messages:
+    if msg["sender"] == "user":
+        st.markdown(f"<div class='user-msg'><div class='msg-content'>{msg['text']}</div></div>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='bot-msg'><div class='msg-content'>{msg['text']}</div></div>", unsafe_allow_html=True)
+
+# Input box
+user_input = st.text_input("Type your message here...", key="input_box")
+
+if st.button("Send") and user_input.strip():
+    # Add user message
+    st.session_state.messages.append({"sender": "user", "text": user_input})
+    
+    # Bot reply
+    reply = get_chatbot_reply(user_input)
+    st.session_state.messages.append({"sender": "bot", "text": reply})
+    
+    # Rerun to display updated messages
+    st.experimental_rerun()
+
+# First greeting if chat is empty
+if not st.session_state.messages:
     greeting = get_time_greeting()
-    return render_template("index.html", greeting=greeting)
+    st.session_state.messages.append({"sender": "bot", "text": greeting})
+    st.experimental_rerun()
 
-
-@app.route("/get", methods=["POST"])
-def get_bot_response():
-    try:
-        user_msg = request.form.get("msg", "").strip()
-        if not user_msg:
-            return jsonify({"reply": "Please type something 😅"})
-        bot_reply = get_chatbot_reply(user_msg)
-        return jsonify({"reply": bot_reply})
-    except Exception as e:
-        print("⚠️ Error during chat response:", e)
-        traceback.print_exc()
-        return jsonify({"reply": "Oops! Something went wrong 😔"})
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5100, debug=False, use_reloader=False)
+st.markdown("</div>", unsafe_allow_html=True)
