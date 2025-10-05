@@ -31,6 +31,7 @@ if "question_embeddings" not in st.session_state:
 # ----------------------------
 # --- Load Model & Data ---
 # ----------------------------
+# Load model & embeddings
 if not st.session_state.model_loaded:
     st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
     try:
@@ -38,9 +39,12 @@ if not st.session_state.model_loaded:
         st.session_state.model, st.session_state.question_embeddings = load_model_and_embeddings(st.session_state.df)
         st.session_state.model_loaded = True
         st.success("✅ Model loaded successfully!")
-        st.write("Model type:", type(st.session_state.model))  # Debug: check model
+        st.write("Model loaded:", st.session_state.model)
     except Exception as e:
-        st.error("❌ Failed to load model or data!")
+        st.session_state.model_loaded = False
+        st.session_state.model = None
+        st.session_state.question_embeddings = None
+        st.error(f"❌ Failed to load model: {e}")
         traceback.print_exc()
 
 # ----------------------------
