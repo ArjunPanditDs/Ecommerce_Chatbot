@@ -11,62 +11,27 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(BASE_DIR, "data", "faq_with_intent.csv")
 
-st.set_page_config(page_title="E-commerce Chatbot 🤖", layout="centered")
+st.set_page_config(page_title="E-commerce Chatbot 🤖", layout="wide")
 
-st.markdown("""
-<style>
-body {
-    background: linear-gradient(135deg, #6e8efb, #a777e3);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-}
-.chat-box {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: 20px;
-}
-.user-msg {
-    text-align: right;
-    margin-bottom: 10px;
-}
-.bot-msg {
-    text-align: left;
-    margin-bottom: 10px;
-}
-.msg-content {
-    display: inline-block;
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 80%;
-}
-.user-msg .msg-content {
-    background: linear-gradient(135deg, #00ff6a, #00c3ff);
-    color: white;
-}
-.bot-msg .msg-content {
-    background: rgba(255, 255, 255, 0.85);
-    color: black;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.title("🤖 E-commerce FAQ Chatbot")
-
-# --- Initialize Chatbot ---
-st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
-try:
-    df = load_data(file_path)
-    model, question_embeddings = load_model_and_embeddings(df)
-    st.success("✅ Model loaded successfully!")
-except Exception as e:
-    st.error("❌ Failed to load model or data!")
-    traceback.print_exc()
-    df, model, question_embeddings = None, None, None
-
-# --- Session State for chat history ---
+# --- Session State ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# --- Load Model ---
+if "model_loaded" not in st.session_state:
+    st.session_state.model_loaded = False
+    st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
+    try:
+        df = load_data(file_path)
+        model, question_embeddings = load_model_and_embeddings(df)
+        st.session_state.model_loaded = True
+        st.success("✅ Model loaded successfully!")
+    except Exception as e:
+        st.error("❌ Failed to load model or data!")
+        traceback.print_exc()
+        df, model, question_embeddings = None, None, None
+
+# --- Helper Functions ---
 def get_time_greeting():
     hour = datetime.now().hour
     if 5 <= hour < 12:
@@ -79,11 +44,10 @@ def get_time_greeting():
         return "Hello there! 🌙 Burning the midnight oil, huh?"
 
 def get_chatbot_reply(user_input):
-    if not model or df is None:
+    if not st.session_state.model_loaded:
         return "⚠️ Chatbot model failed to load. Please try again later."
-
+    
     user_input = clean_text(user_input)
-
     greet = greeting_response(user_input)
     if greet:
         return greet
@@ -98,35 +62,43 @@ def get_chatbot_reply(user_input):
 
     return "Hmm 🤔 I’m not sure about that. Could you rephrase it?"
 
-# --- Chat Interface ---
-st.markdown("<div class='chat-box'>", unsafe_allow_html=True)
+# --- Chat UI ---
+st.title("🤖 E-commerce FAQ Chatbot")
 
-# Display existing messages
-for msg in st.session_state.messages:
-    if msg["sender"] == "user":
-        st.markdown(f"<div class='user-msg'><div class='msg-content'>{msg['text']}</div></div>", unsafe_allow_html=True)
-    else:
-        st.markdown(f"<div class='bot-msg'><div class='msg-content'>{msg['text']}</div></div>", unsafe_allow_html=True)
+chat_container = st.container()
+
+# Add first greeting if empty
+if not st.session_state.messages:
+    st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
+
+with chat_container:
+    for msg in st.session_state.messages:
+        if msg["sender"] == "user":
+            st.markdown(
+                f"<div style='text-align:right; margin-bottom:10px;'>"
+                f"<span style='background: linear-gradient(135deg, #00ff6a, #00c3ff); "
+                f"color:white; padding:10px 15px; border-radius:15px; max-width:70%; display:inline-block;'>{msg['text']}</span>"
+                f"</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(
+                f"<div style='text-align:left; margin-bottom:10px;'>"
+                f"<span style='background: rgba(255,255,255,0.85); "
+                f"color:black; padding:10px 15px; border-radius:15px; max-width:70%; display:inline-block;'>{msg['text']}</span>"
+                f"</div>", unsafe_allow_html=True)
 
 # Input box
 user_input = st.text_input("Type your message here...", key="input_box")
 
-if st.button("Send") and user_input.strip():
+if user_input:
     # Add user message
     st.session_state.messages.append({"sender": "user", "text": user_input})
     
-    # Bot reply
+    # Add bot reply
     reply = get_chatbot_reply(user_input)
     st.session_state.messages.append({"sender": "bot", "text": reply})
     
-    # Rerun to display updated messages
-    st.experimental_rerun()
-
-# First greeting if chat is empty
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-    greeting = get_time_greeting()
-    st.session_state.messages.append({"sender": "bot", "text": greeting})
-
-
-st.markdown("</div>", unsafe_allow_html=True)
+    # Clear input box
+    st.session_state.input_box = ""
+    
+    # Rerun the script naturally (Streamlit auto reruns on input)
+    st.experimental_set_query_params(dummy=datetime.now())  # Forces update without experimental_rerun
