@@ -123,9 +123,10 @@ if st.button("Send") and user_input.strip():
     st.experimental_rerun()
 
 # First greeting if chat is empty
-if not st.session_state.messages:
+if "messages" not in st.session_state:
+    st.session_state.messages = []
     greeting = get_time_greeting()
     st.session_state.messages.append({"sender": "bot", "text": greeting})
-    st.experimental_rerun()
+
 
 st.markdown("</div>", unsafe_allow_html=True)
