@@ -32,8 +32,12 @@ if "question_embeddings" not in st.session_state:
 # --- Load Model & Data ---
 # ----------------------------
 # Load model & embeddings
+if "model_loaded" not in st.session_state:
+    st.session_state.model_loaded = False
+    st.session_state.model = None
+    st.session_state.question_embeddings = None
+
 if not st.session_state.model_loaded:
-    st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
     try:
         st.session_state.df = load_data(file_path)
         st.session_state.model, st.session_state.question_embeddings = load_model_and_embeddings(st.session_state.df)
@@ -41,11 +45,8 @@ if not st.session_state.model_loaded:
         st.success("✅ Model loaded successfully!")
         st.write("Model loaded:", st.session_state.model)
     except Exception as e:
-        st.session_state.model_loaded = False
-        st.session_state.model = None
-        st.session_state.question_embeddings = None
         st.error(f"❌ Failed to load model: {e}")
-        traceback.print_exc()
+
 
 # ----------------------------
 # --- Helper Functions ---
@@ -158,12 +159,10 @@ with chat_container:
 # --- Input Form ---
 # ----------------------------
 with st.form(key="chat_form", clear_on_submit=True):
-    user_input_temp = st.text_input("Type your message here...")
+    user_input = st.text_input("Type your message here...")
     submit_btn = st.form_submit_button("Send")
 
-if submit_btn and user_input_temp.strip():
-    # Save user message
-    st.session_state.messages.append({"sender": "user", "text": user_input_temp})
-    # Get bot reply
-    reply = get_chatbot_reply(user_input_temp)
+if submit_btn and user_input.strip():
+    st.session_state.messages.append({"sender": "user", "text": user_input})
+    reply = get_chatbot_reply(user_input)
     st.session_state.messages.append({"sender": "bot", "text": reply})
