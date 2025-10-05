@@ -123,19 +123,19 @@ with chat_container:
                 st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
 
 # Quick replies
-st.subheader("💡 Quick Questions")
+# st.subheader("💡 Quick Questions")
 
-quick_cols = st.columns(5)
-quick_replies = ["Returns", "Shipping", "Discounts", "Payments", "Tracking"]
+# quick_cols = st.columns(5)
+# quick_replies = ["Returns", "Shipping", "Discounts", "Payments", "Tracking"]
 
-for i, reply in enumerate(quick_replies):
-    with quick_cols[i]:
-        if st.button(reply, key=f"quick_{i}", use_container_width=True):
-            st.session_state.messages.append({"sender": "user", "text": reply})
-            bot_reply = get_chatbot_reply(reply)
-            st.session_state.messages.append({"sender": "bot", "text": bot_reply})
-            st.session_state.input_key += 1
-            st.rerun()
+# for i, reply in enumerate(quick_replies):
+#     with quick_cols[i]:
+#         if st.button(reply, key=f"quick_{i}", use_container_width=True):
+#             st.session_state.messages.append({"sender": "user", "text": reply})
+#             bot_reply = get_chatbot_reply(reply)
+#             st.session_state.messages.append({"sender": "bot", "text": bot_reply})
+#             st.session_state.input_key += 1
+#             st.rerun()
 
 # Input section - Using Streamlit's chat input (supports Enter key)
 user_input = st.chat_input("💬 Type your message here...")
