@@ -14,7 +14,9 @@ file_path = os.path.join(BASE_DIR, "data", "faq_with_intent.csv")
 
 st.set_page_config(page_title="E-commerce Chatbot 🤖", layout="wide")
 
-# Initialize session state
+# ----------------------------
+# --- Session State ---
+# ----------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "model_loaded" not in st.session_state:
@@ -36,6 +38,7 @@ if not st.session_state.model_loaded:
         st.session_state.model, st.session_state.question_embeddings = load_model_and_embeddings(st.session_state.df)
         st.session_state.model_loaded = True
         st.success("✅ Model loaded successfully!")
+        st.write("Model type:", type(st.session_state.model))  # Debug: check model
     except Exception as e:
         st.error("❌ Failed to load model or data!")
         traceback.print_exc()
@@ -55,10 +58,11 @@ def get_time_greeting():
         return "Hello there! 🌙 Burning the midnight oil, huh?"
 
 def get_chatbot_reply(user_input):
-    if not st.session_state.model_loaded:
+    if not st.session_state.model_loaded or st.session_state.model is None:
         return "⚠️ Chatbot model failed to load. Please try again later."
     
     user_input_clean = clean_text(user_input)
+    
     greet = greeting_response(user_input_clean)
     if greet:
         return greet
@@ -67,14 +71,21 @@ def get_chatbot_reply(user_input):
     if biz:
         return biz
 
-    ml_reply = chatbot_response(user_input_clean, st.session_state.model, st.session_state.df, st.session_state.question_embeddings)
-    if ml_reply:
-        return ml_reply
+    # Only call ML model if it is loaded
+    if st.session_state.model:
+        ml_reply = chatbot_response(
+            user_input_clean, 
+            st.session_state.model, 
+            st.session_state.df, 
+            st.session_state.question_embeddings
+        )
+        if ml_reply:
+            return ml_reply
 
     return "Hmm 🤔 I’m not sure about that. Could you rephrase it?"
 
 # ----------------------------
-# --- Chat UI ---
+# --- UI Styling ---
 # ----------------------------
 st.markdown("""
 <style>
@@ -117,13 +128,15 @@ body {
 
 st.title("🤖 E-commerce FAQ Chatbot")
 
+# ----------------------------
+# --- Chat Display ---
+# ----------------------------
 chat_container = st.container()
 
 # Add first greeting if empty
 if not st.session_state.messages:
     st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
 
-# Display messages
 with chat_container:
     st.markdown("<div class='chat-box'>", unsafe_allow_html=True)
     for msg in st.session_state.messages:
@@ -145,9 +158,8 @@ with st.form(key="chat_form", clear_on_submit=True):
     submit_btn = st.form_submit_button("Send")
 
 if submit_btn and user_input_temp.strip():
+    # Save user message
     st.session_state.messages.append({"sender": "user", "text": user_input_temp})
+    # Get bot reply
     reply = get_chatbot_reply(user_input_temp)
     st.session_state.messages.append({"sender": "bot", "text": reply})
-    
-    # Force rerun to update chat display
-    st.experimental_set_query_params(dummy=datetime.now())
