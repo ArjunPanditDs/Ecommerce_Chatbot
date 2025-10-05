@@ -17,7 +17,7 @@ def greeting_response(text):
     """
     text = clean_text(text)
 
-    if any(word in text for word in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]):
+    if any(word in text for word in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "good night"]):  # good night add kiya
         return "Good day! 🌞 How can I help you today?"
     elif "how are you" in text:
         return "I'm doing great 😄 Thanks for asking! How about you?"
@@ -28,7 +28,6 @@ def greeting_response(text):
     else:
         return None
 
-
 def rule_based_response(text):
     """
     Handles quick FAQ-like rule-based responses (delivery, warranty, etc.)
@@ -38,8 +37,8 @@ def rule_based_response(text):
     if any(word in text for word in ["bye", "goodbye", "exit", "stop", "see you", "tata", "thank you"]):
         return "Goodbye! 👋 Hope to chat with you again soon."
 
-        # --- Bot Introduction ---
-    elif any(phrase in text for phrase in ["who are you", "what are you", "your name", "who made you"]):
+    # --- Bot Introduction ---
+    elif any(phrase in text for phrase in ["who are you", "what are you", "your name", "who made you", "who is mohit"]):  # who is mohit add kiya
         return "I am a chatbot for e-commerce, created by Mr. Mohit 🤖."
     
     elif any(phrase in text for phrase in ["warranty", "guarantee", "product warranty", "warranty claim"]):
@@ -52,7 +51,7 @@ def rule_based_response(text):
             "You can request a return or refund within 7 days of delivery 📦.\n"
             "Visit 'My Orders' → Select item → Choose 'Return/Refund'."
         )
-    elif any(phrase in text for phrase in ["delivery", "shipping", "track order", "status"]):
+    elif any(phrase in text for phrase in ["delivery", "shipping", "track order", "status", "tracking", "track"]):  # tracking add kiya
         return (
             "You can track your order via the 'Track Order' section 🚚.\n"
             "Delivery usually takes 3–5 business days."
@@ -67,6 +66,9 @@ def rule_based_response(text):
             "You can cancel an order before it ships 🚫.\n"
             "Go to 'My Orders' → Select order → Tap 'Cancel'."
         )
+        # --- Bot Introduction ---
+    elif any(phrase in text for phrase in ["who are you", "what are you", "your name", "who made you","who created you","who makes you" "who is mohit", "about mohit"]):  # Add more variations
+        return "I am a chatbot for e-commerce, created by Mr. Mohit and his team 'The Data Decoders' with the help of mr. Santosh sir (Sandy)🤖."
     else:
         return None
 
@@ -112,7 +114,7 @@ def business_response(text):
         )
     elif any(phrase in text for phrase in ["stock", "out of stock", "when available"]):
         return (
-            "Enable 'Notify Me' on the product page 🛒 — we’ll alert you once it’s back in stock!"
+            "Enable 'Notify Me' on the product page 🛒 — we'll alert you once it's back in stock!"
         )
     elif any(phrase in text for phrase in ["change address", "edit order", "update address"]):
         return (
@@ -134,5 +136,40 @@ def business_response(text):
 spell = SpellChecker()
 
 def correct_spelling(text):
-    corrected_words = [spell.correction(word) for word in text.split()]
-    return " ".join(corrected_words)
+    """
+    Correct spelling of the input text using SpellChecker
+    Returns the corrected text or original text if correction fails
+    """
+    try:
+        # Check if text is valid
+        if not text or not isinstance(text, str) or text.strip() == "":
+            return text
+            
+        words = text.split()
+        corrected_words = []
+        
+        for word in words:
+            try:
+                # Get corrected word
+                corrected_word = spell.correction(word)
+                
+                # If correction returns None or empty, use original word
+                if corrected_word is None or corrected_word == "":
+                    corrected_words.append(word)
+                else:
+                    corrected_words.append(corrected_word)
+                    
+            except Exception as e:
+                # If any error in correcting a word, use the original word
+                corrected_words.append(word)
+        
+        # Join only if we have valid words
+        if corrected_words:
+            return " ".join(corrected_words)
+        else:
+            return text
+            
+    except Exception as e:
+        print(f"Spelling correction error: {e}")
+        # Return original text if any error occurs
+        return text
