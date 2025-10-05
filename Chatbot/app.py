@@ -3,7 +3,6 @@ from datetime import datetime
 from utils import clean_text, greeting_response, business_response
 from models import load_data, load_model_and_embeddings
 from chatbot_core import chatbot_response
-import pandas as pd
 import traceback
 import os
 
@@ -20,6 +19,12 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "model_loaded" not in st.session_state:
     st.session_state.model_loaded = False
+if "model" not in st.session_state:
+    st.session_state.model = None
+if "df" not in st.session_state:
+    st.session_state.df = None
+if "question_embeddings" not in st.session_state:
+    st.session_state.question_embeddings = None
 
 # ----------------------------
 # --- Load Model & Data ---
@@ -27,14 +32,13 @@ if "model_loaded" not in st.session_state:
 if not st.session_state.model_loaded:
     st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
     try:
-        df = load_data(file_path)
-        model, question_embeddings = load_model_and_embeddings(df)
+        st.session_state.df = load_data(file_path)
+        st.session_state.model, st.session_state.question_embeddings = load_model_and_embeddings(st.session_state.df)
         st.session_state.model_loaded = True
         st.success("✅ Model loaded successfully!")
     except Exception as e:
         st.error("❌ Failed to load model or data!")
         traceback.print_exc()
-        df, model, question_embeddings = None, None, None
 
 # ----------------------------
 # --- Helper Functions ---
@@ -63,7 +67,7 @@ def get_chatbot_reply(user_input):
     if biz:
         return biz
 
-    ml_reply = chatbot_response(user_input_clean, model, df, question_embeddings)
+    ml_reply = chatbot_response(user_input_clean, st.session_state.model, st.session_state.df, st.session_state.question_embeddings)
     if ml_reply:
         return ml_reply
 
@@ -141,12 +145,9 @@ with st.form(key="chat_form", clear_on_submit=True):
     submit_btn = st.form_submit_button("Send")
 
 if submit_btn and user_input_temp.strip():
-    # Save user message
     st.session_state.messages.append({"sender": "user", "text": user_input_temp})
-    
-    # Get bot reply
     reply = get_chatbot_reply(user_input_temp)
     st.session_state.messages.append({"sender": "bot", "text": reply})
     
-    # Rerun naturally by modifying a dummy query param (Streamlit auto updates)
+    # Force rerun to update chat display
     st.experimental_set_query_params(dummy=datetime.now())
