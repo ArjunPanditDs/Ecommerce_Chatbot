@@ -19,12 +19,16 @@ st.set_page_config(page_title="E-commerce Chatbot 🤖", layout="wide")
 # ----------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
 if "model_loaded" not in st.session_state:
     st.session_state.model_loaded = False
+
 if "model" not in st.session_state:
     st.session_state.model = None
+
 if "df" not in st.session_state:
     st.session_state.df = None
+
 if "question_embeddings" not in st.session_state:
     st.session_state.question_embeddings = None
 
@@ -32,21 +36,15 @@ if "question_embeddings" not in st.session_state:
 # --- Load Model & Data ---
 # ----------------------------
 if not st.session_state.model_loaded:
-    if not os.path.exists(file_path):
-        st.error(f"❌ Data file not found at: {file_path}")
-    else:
-        st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
-        try:
-            st.session_state.df = load_data(file_path)
-            st.session_state.model, st.session_state.question_embeddings = load_model_and_embeddings(st.session_state.df)
-            if st.session_state.model is None:
-                raise ValueError("Model returned None")
-            st.session_state.model_loaded = True
-            st.success("✅ Model loaded successfully!")
-        except Exception as e:
-            st.session_state.model_loaded = False
-            st.error(f"❌ Failed to load model or data: {e}")
-            traceback.print_exc()
+    st.info("⚙️ Loading model and FAQ embeddings... Please wait.")
+    try:
+        st.session_state.df = load_data(file_path)
+        st.session_state.model, st.session_state.question_embeddings = load_model_and_embeddings(st.session_state.df)
+        st.session_state.model_loaded = True
+        st.success("✅ Model loaded successfully!")
+    except Exception:
+        st.error("❌ Failed to load model or data!")
+        traceback.print_exc()
 
 # ----------------------------
 # --- Helper Functions ---
@@ -63,9 +61,11 @@ def get_time_greeting():
         return "Hello there! 🌙 Burning the midnight oil, huh?"
 
 def get_chatbot_reply(user_input):
+    if not st.session_state.model_loaded or st.session_state.model is None:
+        return "⚠️ Chatbot model failed to load. Please try again later."
+
     user_input_clean = clean_text(user_input)
-    
-    # Greeting or business rules first
+
     greet = greeting_response(user_input_clean)
     if greet:
         return greet
@@ -74,26 +74,19 @@ def get_chatbot_reply(user_input):
     if biz:
         return biz
 
-    # ML reply only if model loaded
-    if st.session_state.model_loaded and st.session_state.model:
-        try:
-            ml_reply = chatbot_response(
-                user_input_clean,
-                st.session_state.model,
-                st.session_state.df,
-                st.session_state.question_embeddings
-            )
-            if ml_reply:
-                return ml_reply
-        except Exception as e:
-            st.error(f"⚠️ Error generating ML reply: {e}")
-            traceback.print_exc()
+    ml_reply = chatbot_response(
+        user_input_clean,
+        st.session_state.model,
+        st.session_state.df,
+        st.session_state.question_embeddings
+    )
+    if ml_reply:
+        return ml_reply
 
-    # Fallback
-    return "⚠️ Chatbot ML model not available. Please ask general questions or try later."
+    return "Hmm 🤔 I’m not sure about that. Could you rephrase it?"
 
 # ----------------------------
-# --- Chat UI Styling ---
+# --- UI Styling ---
 # ----------------------------
 st.markdown("""
 <style>
@@ -162,14 +155,16 @@ with chat_container:
 # --- Input Form ---
 # ----------------------------
 with st.form(key="chat_form", clear_on_submit=True):
-    user_input_temp = st.text_input("Type your message here...", placeholder="Ask me about orders, warranty, etc.")
+    user_input_temp = st.text_input("Type your message here...")
     submit_btn = st.form_submit_button("Send")
 
+# Handle user input
 if submit_btn and user_input_temp.strip():
     # Add user message
     st.session_state.messages.append({"sender": "user", "text": user_input_temp})
+    
     # Add bot reply
     reply = get_chatbot_reply(user_input_temp)
     st.session_state.messages.append({"sender": "bot", "text": reply})
-    # Force rerun to refresh chat
-    st.experimental_set_query_params(dummy=datetime.now())
+    
+    # Streamlit auto-reruns when session_state changes; no extra hack needed
