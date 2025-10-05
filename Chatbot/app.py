@@ -4,12 +4,19 @@ from chatbot_core import chatbot_response
 from utils import clean_text, greeting_response, business_response
 from datetime import datetime
 import traceback
+import os
+import pandas as pd
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(BASE_DIR, "data", "faq_with_intent.csv")
+# df = pd.read_csv(file_path)
+
 
 app = Flask(__name__)
 
 print("⚙️ Initializing Chatbot System...")
 try:
-    df = load_data("data/faq_with_intent.csv")
+    df = load_data(file_path)
     model, question_embeddings = load_model_and_embeddings(df)
     print("✅ Model and FAQ embeddings loaded successfully!")
 except Exception as e:

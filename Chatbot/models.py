@@ -3,8 +3,14 @@ from sentence_transformers import SentenceTransformer
 
 # ============================
 # Load Dataset
-# ============================
-def load_data(path="data/faq_with_intent.csv"):
+import os
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(BASE_DIR, "data", "faq_with_intent.csv")
+# df = pd.read_csv(file_path)
+
+def load_data(path=file_path):
     df = pd.read_csv(path)
     return df
 
