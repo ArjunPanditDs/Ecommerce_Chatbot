@@ -19,6 +19,66 @@ st.set_page_config(
 )
 
 # ----------------------------
+# --- Helper Functions ---
+# ----------------------------
+def get_time_greeting():
+    hour = datetime.now().hour
+    if 5 <= hour < 12:
+        return "Good morning! 🌅 How can I help you today?"
+    elif 12 <= hour < 17:
+        return "Good afternoon! 🌤 How can I help you today?"
+    elif 17 <= hour < 22:
+        return "Good evening! 🌙 What can I assist you with?"
+    else:
+        return "Hello there! 🌙 Burning the midnight oil, huh?"
+
+def get_chatbot_reply(user_input):
+    # Debug: Check model status
+    print(f"Debug - Model loaded: {st.session_state.model_loaded}")
+    
+    if not st.session_state.model_loaded or st.session_state.model is None:
+        user_input_clean = clean_text(user_input)
+        greet = greeting_response(user_input_clean)
+        if greet:
+            return greet
+        biz = business_response(user_input_clean)
+        if biz:
+            return biz
+        return "⚠️ Chatbot model failed to load. Please try again later."
+
+    try:
+        user_input_clean = clean_text(user_input)
+        greet = greeting_response(user_input_clean)
+        if greet:
+            return greet
+        biz = business_response(user_input_clean)
+        if biz:
+            return biz
+
+        ml_reply = chatbot_response(
+            user_input_clean,
+            st.session_state.model,
+            st.session_state.df,
+            st.session_state.question_embeddings
+        )
+        if ml_reply:
+            return ml_reply
+
+        return "Hmm 🤔 I'm not sure about that. Could you rephrase it?"
+    
+    except Exception as e:
+        print(f"Error in get_chatbot_reply: {e}")
+        # Fallback to rule-based responses
+        user_input_clean = clean_text(user_input)
+        greet = greeting_response(user_input_clean)
+        if greet:
+            return greet
+        biz = business_response(user_input_clean)
+        if biz:
+            return biz
+        return "Hmm 🤔 I'm not sure about that. Could you rephrase it?"
+
+# ----------------------------
 # --- Session State ---
 # ----------------------------
 if "messages" not in st.session_state:
@@ -51,61 +111,25 @@ if not st.session_state.model_loaded:
             st.success("✅ Model loaded successfully!")
             
             # Load previous chat history from database
-            previous_messages = database.get_chat_history(st.session_state.session_id)
-            if previous_messages:
-                st.session_state.messages = previous_messages
-                st.info(f"📜 Loaded {len(previous_messages)} previous messages")
-            else:
-                # Add first greeting if no previous messages
+            try:
+                previous_messages = database.get_chat_history(st.session_state.session_id)
+                if previous_messages:
+                    st.session_state.messages = previous_messages
+                    st.info(f"📜 Loaded {len(previous_messages)} previous messages")
+                else:
+                    # Add first greeting if no previous messages
+                    st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
+            except Exception as db_error:
+                print(f"Database error: {db_error}")
                 st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
                 
         except Exception as e:
+            st.session_state.model_loaded = False
             st.error("❌ Failed to load model or data! Chatbot will only answer greetings or fallback responses.")
             traceback.print_exc()
-
-# ----------------------------
-# --- Helper Functions ---
-# ----------------------------
-def get_time_greeting():
-    hour = datetime.now().hour
-    if 5 <= hour < 12:
-        return "Good morning! 🌅 How can I help you today?"
-    elif 12 <= hour < 17:
-        return "Good afternoon! 🌤 How can I help you today?"
-    elif 17 <= hour < 22:
-        return "Good evening! 🌙 What can I assist you with?"
-    else:
-        return "Hello there! 🌙 Burning the midnight oil, huh?"
-
-def get_chatbot_reply(user_input):
-    if not st.session_state.model_loaded or st.session_state.model is None:
-        user_input_clean = clean_text(user_input)
-        greet = greeting_response(user_input_clean)
-        if greet:
-            return greet
-        biz = business_response(user_input_clean)
-        if biz:
-            return biz
-        return "⚠️ Chatbot model failed to load. Please try again later."
-
-    user_input_clean = clean_text(user_input)
-    greet = greeting_response(user_input_clean)
-    if greet:
-        return greet
-    biz = business_response(user_input_clean)
-    if biz:
-        return biz
-
-    ml_reply = chatbot_response(
-        user_input_clean,
-        st.session_state.model,
-        st.session_state.df,
-        st.session_state.question_embeddings
-    )
-    if ml_reply:
-        return ml_reply
-
-    return "Hmm 🤔 I'm not sure about that. Could you rephrase it?"
+            # Still add greeting message
+            if not st.session_state.messages:
+                st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
 
 # ----------------------------
 # --- Streamlit UI ---
@@ -132,17 +156,11 @@ with chat_container:
         if msg["sender"] == "user":
             with st.chat_message("user"):
                 st.write(msg['text'])
-                if 'timestamp' in msg:
-                    st.caption(f"Sent at {msg['timestamp']}")
-                else:
-                    st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
+                st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
         else:
             with st.chat_message("assistant"):
                 st.write(msg['text'])
-                if 'timestamp' in msg:
-                    st.caption(f"Sent at {msg['timestamp']}")
-                else:
-                    st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
+                st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
 
 # Input section - Using Streamlit's chat input
 user_input = st.chat_input("💬 Type your message here...")
@@ -159,19 +177,24 @@ if user_input:
         st.session_state.messages.append({"sender": "bot", "text": reply})
         
         # Save to database
-        database.save_chat(st.session_state.session_id, user_input.strip(), reply)
+        try:
+            database.save_chat(st.session_state.session_id, user_input.strip(), reply)
+        except Exception as e:
+            print(f"Database save error: {e}")
         
-        st.session_state.input_key += 1
         st.rerun()
 
 # Admin section in sidebar (optional)
 with st.sidebar:
     st.header("💾 Database Info")
     if st.button("View All Sessions"):
-        sessions = database.get_all_sessions()
-        st.write(f"Total Sessions: {len(sessions)}")
-        for session in sessions[:5]:  # Show latest 5 sessions
-            st.write(f"Session: {session['session_id'][:8]}... | Messages: {session['message_count']}")
+        try:
+            sessions = database.get_all_sessions()
+            st.write(f"Total Sessions: {len(sessions)}")
+            for session in sessions[:5]:  # Show latest 5 sessions
+                st.write(f"Session: {session['session_id'][:8]}... | Messages: {session['message_count']}")
+        except Exception as e:
+            st.error(f"Error loading sessions: {e}")
     
     if st.button("Clear Current Session"):
         st.session_state.messages = [{"sender": "bot", "text": get_time_greeting()}]
