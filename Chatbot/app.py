@@ -5,6 +5,7 @@ from models import load_data, load_model_and_embeddings
 from chatbot_core import chatbot_response
 import traceback
 import os
+import database  # New import for database
 
 # ----------------------------
 # --- App Setup ---
@@ -34,6 +35,9 @@ if "last_input" not in st.session_state:
     st.session_state.last_input = None
 if "input_key" not in st.session_state:
     st.session_state.input_key = 0
+if "session_id" not in st.session_state:
+    # Generate unique session ID for database
+    st.session_state.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(str(datetime.now()))}"
 
 # ----------------------------
 # --- Load Model & Data ---
@@ -45,6 +49,16 @@ if not st.session_state.model_loaded:
             st.session_state.model, st.session_state.question_embeddings = load_model_and_embeddings(st.session_state.df)
             st.session_state.model_loaded = True
             st.success("✅ Model loaded successfully!")
+            
+            # Load previous chat history from database
+            previous_messages = database.get_chat_history(st.session_state.session_id)
+            if previous_messages:
+                st.session_state.messages = previous_messages
+                st.info(f"📜 Loaded {len(previous_messages)} previous messages")
+            else:
+                # Add first greeting if no previous messages
+                st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
+                
         except Exception as e:
             st.error("❌ Failed to load model or data! Chatbot will only answer greetings or fallback responses.")
             traceback.print_exc()
@@ -94,59 +108,73 @@ def get_chatbot_reply(user_input):
     return "Hmm 🤔 I'm not sure about that. Could you rephrase it?"
 
 # ----------------------------
-# --- Pure Streamlit UI ---
+# --- Streamlit UI ---
 # ----------------------------
 
-# Header
-st.title("🤖 E-commerce Assistant")
-st.caption("Always here to help you! 💫")
+# Header with session info
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.title("🤖 E-commerce Assistant")
+    st.caption("Always here to help you! 💫")
+with col2:
+    st.caption(f"Session: {st.session_state.session_id[:8]}...")
+    if st.button("🔄 New Session"):
+        st.session_state.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(str(datetime.now()))}"
+        st.session_state.messages = [{"sender": "bot", "text": get_time_greeting()}]
+        st.rerun()
 
-# Add first greeting if no messages
-if not st.session_state.messages:
-    st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
-
-# Chat container with auto-height (Streamlit handles scrolling)
+# Chat container
 chat_container = st.container()
 
 with chat_container:
     # Display all messages
-    for i, msg in enumerate(st.session_state.messages):
+    for msg in st.session_state.messages:
         if msg["sender"] == "user":
-            # User message - using Streamlit's native styling
             with st.chat_message("user"):
                 st.write(msg['text'])
-                st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
+                if 'timestamp' in msg:
+                    st.caption(f"Sent at {msg['timestamp']}")
+                else:
+                    st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
         else:
-            # Bot message - using Streamlit's native styling
             with st.chat_message("assistant"):
                 st.write(msg['text'])
-                st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
+                if 'timestamp' in msg:
+                    st.caption(f"Sent at {msg['timestamp']}")
+                else:
+                    st.caption(f"Sent at {datetime.now().strftime('%H:%M')}")
 
-# Quick replies
-# st.subheader("💡 Quick Questions")
-
-# quick_cols = st.columns(5)
-# quick_replies = ["Returns", "Shipping", "Discounts", "Payments", "Tracking"]
-
-# for i, reply in enumerate(quick_replies):
-#     with quick_cols[i]:
-#         if st.button(reply, key=f"quick_{i}", use_container_width=True):
-#             st.session_state.messages.append({"sender": "user", "text": reply})
-#             bot_reply = get_chatbot_reply(reply)
-#             st.session_state.messages.append({"sender": "bot", "text": bot_reply})
-#             st.session_state.input_key += 1
-#             st.rerun()
-
-# Input section - Using Streamlit's chat input (supports Enter key)
+# Input section - Using Streamlit's chat input
 user_input = st.chat_input("💬 Type your message here...")
 
 if user_input:
     if user_input.strip() and st.session_state.last_input != user_input.strip():
         st.session_state.last_input = user_input.strip()
+        
+        # Add user message to chat
         st.session_state.messages.append({"sender": "user", "text": user_input.strip()})
+        
+        # Get bot reply
         reply = get_chatbot_reply(user_input.strip())
         st.session_state.messages.append({"sender": "bot", "text": reply})
+        
+        # Save to database
+        database.save_chat(st.session_state.session_id, user_input.strip(), reply)
+        
         st.session_state.input_key += 1
+        st.rerun()
+
+# Admin section in sidebar (optional)
+with st.sidebar:
+    st.header("💾 Database Info")
+    if st.button("View All Sessions"):
+        sessions = database.get_all_sessions()
+        st.write(f"Total Sessions: {len(sessions)}")
+        for session in sessions[:5]:  # Show latest 5 sessions
+            st.write(f"Session: {session['session_id'][:8]}... | Messages: {session['message_count']}")
+    
+    if st.button("Clear Current Session"):
+        st.session_state.messages = [{"sender": "bot", "text": get_time_greeting()}]
         st.rerun()
 
 # Add some space at bottom
