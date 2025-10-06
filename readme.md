@@ -114,10 +114,10 @@ That’s it — your chatbot is live!
     bot_message TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
----
 
-## 🧑‍💻 Sessions Table
----
+
+ 🧑‍💻 Sessions Table
+
 CREATE TABLE sessions (
     session_id TEXT PRIMARY KEY,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
