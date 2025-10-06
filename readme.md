@@ -101,7 +101,6 @@ Visit http://localhost:8501
     Click Deploy 🚀
 
 That’s it — your chatbot is live!
----
 
 ## 📊 Database Schema
 
@@ -125,6 +124,7 @@ CREATE TABLE sessions (
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+---
 🧠 Technical Architecture
 ⚙️ Response Pipeline
 
