@@ -105,8 +105,6 @@ That’s it — your chatbot is live!
 
 ## 📊 Database Schema
 
----
-
 ### 🗨️ Chats Table
 
 ```sql
@@ -126,95 +124,81 @@ CREATE TABLE sessions (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP
 );
----
----
 
-## 🧠 Technical Architecture
-**⚙️ Response Pipeline**
----
-    Input Layer
+🧠 Technical Architecture
+⚙️ Response Pipeline
 
-        Text cleaning & normalization
+Input Layer
 
-        Spelling correction
+    Text cleaning & normalization
 
-        Intent detection
+    Spelling correction
 
-    Processing Layer
+    Intent detection
 
-        Greeting & FAQ matching
+Processing Layer
 
-        ML-based semantic similarity
+    Greeting & FAQ matching
 
-        Confidence-based response selection
+    ML-based semantic similarity
 
-    Storage Layer
+    Confidence-based response selection
 
-        Save user & bot messages to SQLite
+Storage Layer
 
-        Track and update session data
----
+    Save user & bot messages to SQLite
 
-- 🧬 Machine Learning Stack
-- Component	Description
-- Sentence Transformers	Semantic understanding
-- Cosine Similarity	Query-to-response matching
-- PySpellChecker	Error correction
-- Thresholding	Confidence control
-- 🌟 Key Features in Action
+    Track and update session data
 
----
-**📈 Performance Metrics**
-**Metric	Value**
-**⏱️ Response Time	< 2 seconds**
-**🎯 Accuracy	85%+**
-**🌐 Uptime	24/7**
-**🧍 Users	Multi-user support**
-**🔒 Privacy & Security**
+🧬 Machine Learning Stack
+Component	Description
+Sentence Transformers	Semantic understanding
+Cosine Similarity	Query-to-response matching
+PySpellChecker	Error correction
+Thresholding	Confidence control
+🌟 Key Features in Action
+📈 Performance Metrics
+Metric	Value
+⏱️ Response Time	< 2 seconds
+🎯 Accuracy	85%+
+🌐 Uptime	24/7
+🧍 Users	Multi-user support
+🔒 Privacy & Security
 
-   - 🚫 No personal data stored
+    🚫 No personal data stored
 
-   -  🔐 Session isolation
+    🔐 Session isolation
 
-   -  💾 Local-only database
+    💾 Local-only database
 
-   - ⚙️ No third-party data sharing
+    ⚙️ No third-party data sharing
 
-**🤝 Contributing**
+🤝 Contributing
 
-   - Fork the repo
+    Fork the repo
 
-   - Create a new feature branch
+    Create a new feature branch
 
-   - Commit your updates
+    Commit your updates
 
-   - Push to your fork
+    Push to your fork
 
-   - Open a Pull Request 🚀
+    Open a Pull Request 🚀
 
-**🙏 Acknowledgments**
+🙏 Acknowledgments
 
-  - Streamlit
+    Streamlit - Amazing framework
 
-— Amazing framework
+    Sentence Transformers - Semantic search magic
 
-**Sentence Transformers**
+    PySpellChecker - Typo fixer
 
-— Semantic search magic
-
-**PySpellChecker**
-
-— Typo fixer
-
-SQLite
-
-    — Lightweight DB
----
+    SQLite - Lightweight DB
 
 ⭐ If you found this helpful, give it a star!
+
 🐛 Found a bug? Open an issue
 
-.
-💡 Have an idea? Let’s make it better together.
+💡 Have an idea? Let's make it better together
 
-***Built with ❤️ and Python for smarter e-commerce support.***
+Built with ❤️ and Python for smarter e-commerce support.
