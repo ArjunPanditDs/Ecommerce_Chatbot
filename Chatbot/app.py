@@ -5,7 +5,7 @@ from models import load_data, load_model_and_embeddings
 from chatbot_core import chatbot_response
 import traceback
 import os
-import database  # New import for database
+import database  # Database import
 
 # ----------------------------
 # --- App Setup ---
@@ -17,6 +17,17 @@ st.set_page_config(
     page_title="E-commerce Chatbot 🤖", 
     layout="centered"
 )
+
+# Hide sidebar and header elements
+st.markdown("""
+<style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display: none;}
+    #stDecoration {display: none;}
+</style>
+""", unsafe_allow_html=True)
 
 # ----------------------------
 # --- Helper Functions ---
@@ -33,9 +44,6 @@ def get_time_greeting():
         return "Hello there! 🌙 Burning the midnight oil, huh?"
 
 def get_chatbot_reply(user_input):
-    # Debug: Check model status
-    print(f"Debug - Model loaded: {st.session_state.model_loaded}")
-    
     if not st.session_state.model_loaded or st.session_state.model is None:
         user_input_clean = clean_text(user_input)
         greet = greeting_response(user_input_clean)
@@ -67,7 +75,6 @@ def get_chatbot_reply(user_input):
         return "Hmm 🤔 I'm not sure about that. Could you rephrase it?"
     
     except Exception as e:
-        print(f"Error in get_chatbot_reply: {e}")
         # Fallback to rule-based responses
         user_input_clean = clean_text(user_input)
         greet = greeting_response(user_input_clean)
@@ -115,19 +122,15 @@ if not st.session_state.model_loaded:
                 previous_messages = database.get_chat_history(st.session_state.session_id)
                 if previous_messages:
                     st.session_state.messages = previous_messages
-                    st.info(f"📜 Loaded {len(previous_messages)} previous messages")
                 else:
                     # Add first greeting if no previous messages
                     st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
             except Exception as db_error:
-                print(f"Database error: {db_error}")
                 st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
                 
         except Exception as e:
             st.session_state.model_loaded = False
             st.error("❌ Failed to load model or data! Chatbot will only answer greetings or fallback responses.")
-            traceback.print_exc()
-            # Still add greeting message
             if not st.session_state.messages:
                 st.session_state.messages.append({"sender": "bot", "text": get_time_greeting()})
 
@@ -135,17 +138,9 @@ if not st.session_state.model_loaded:
 # --- Streamlit UI ---
 # ----------------------------
 
-# Header with session info
-col1, col2 = st.columns([3, 1])
-with col1:
-    st.title("🤖 E-commerce Assistant")
-    st.caption("Always here to help you! 💫")
-with col2:
-    st.caption(f"Session: {st.session_state.session_id[:8]}...")
-    if st.button("🔄 New Session"):
-        st.session_state.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(str(datetime.now()))}"
-        st.session_state.messages = [{"sender": "bot", "text": get_time_greeting()}]
-        st.rerun()
+# Clean Header - Only chatbot name
+st.markdown("<h1 style='text-align: center;'>🤖 E-commerce Assistant</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>Always here to help you! 💫</p>", unsafe_allow_html=True)
 
 # Chat container
 chat_container = st.container()
@@ -176,28 +171,12 @@ if user_input:
         reply = get_chatbot_reply(user_input.strip())
         st.session_state.messages.append({"sender": "bot", "text": reply})
         
-        # Save to database
+        # Save to database (silently in background)
         try:
             database.save_chat(st.session_state.session_id, user_input.strip(), reply)
         except Exception as e:
-            print(f"Database save error: {e}")
+            pass  # Silent fail - database saves in background
         
-        st.rerun()
-
-# Admin section in sidebar (optional)
-with st.sidebar:
-    st.header("💾 Database Info")
-    if st.button("View All Sessions"):
-        try:
-            sessions = database.get_all_sessions()
-            st.write(f"Total Sessions: {len(sessions)}")
-            for session in sessions[:5]:  # Show latest 5 sessions
-                st.write(f"Session: {session['session_id'][:8]}... | Messages: {session['message_count']}")
-        except Exception as e:
-            st.error(f"Error loading sessions: {e}")
-    
-    if st.button("Clear Current Session"):
-        st.session_state.messages = [{"sender": "bot", "text": get_time_greeting()}]
         st.rerun()
 
 # Add some space at bottom

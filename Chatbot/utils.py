@@ -38,8 +38,8 @@ def rule_based_response(text):
         return "Goodbye! 👋 Hope to chat with you again soon."
 
     # --- Bot Introduction ---
-    elif any(phrase in text for phrase in ["who are you", "what are you", "your name", "who made you", "who is mohit"]):  # who is mohit add kiya
-        return "I am a chatbot for e-commerce, created by Mr. Mohit 🤖."
+    elif any(phrase in text for phrase in ["who are you", "what are you", "your name", "who made you","who created you","who makes you" "who is mohit", "about mohit"]):  # Add more variations
+        return "I am a chatbot for e-commerce, created by Mr. Mohit and his team 'The Data Decoders' with the help of mr. Santosh sir (Sandy)🤖."
     
     elif any(phrase in text for phrase in ["warranty", "guarantee", "product warranty", "warranty claim"]):
         return (
@@ -67,8 +67,6 @@ def rule_based_response(text):
             "Go to 'My Orders' → Select order → Tap 'Cancel'."
         )
         # --- Bot Introduction ---
-    elif any(phrase in text for phrase in ["who are you", "what are you", "your name", "who made you","who created you","who makes you" "who is mohit", "about mohit"]):  # Add more variations
-        return "I am a chatbot for e-commerce, created by Mr. Mohit and his team 'The Data Decoders' with the help of mr. Santosh sir (Sandy)🤖."
     else:
         return None
 
