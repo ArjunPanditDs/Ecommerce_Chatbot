@@ -12,8 +12,7 @@
 ---
 
 ## 🚀 Live Demo  
-**[🔗 View Live Chatbot](chatbot3212227.streamlit.app/)**  
-_Replace with your actual Streamlit Cloud URL._
+**chatbot3212227.streamlit.app**  
 
 ---
 
@@ -68,28 +67,27 @@ ecommerce_chatbot/
 ### 💻 Local Setup  
 
 #### 1️⃣ Clone the repository
-```bash
 git https://github.com/ArjunPanditDs/Ecommerce_Chatbot.git
 cd Ecommerce_Chatbot
 
-2️⃣ Create and activate virtual environment
+## 2️⃣ Create and activate virtual environment
 
 python -m venv chatbot
 chatbot\Scripts\activate   # On Windows
 # source chatbot/bin/activate   # On Mac/Linux
 
-3️⃣ Install dependencies
+## 3️⃣ Install dependencies
 
 pip install -r requirements.txt
 
-4️⃣ Run the chatbot
+## 4️⃣ Run the chatbot
 
 streamlit run app.py
 
-5️⃣ Open in browser
+## 5️⃣ Open in browser
 
 Visit http://localhost:8501
-
+bash```
 🎉
 ☁️ Streamlit Cloud Deployment
 
@@ -102,10 +100,11 @@ Visit http://localhost:8501
     Click Deploy 🚀
 
 That’s it — your chatbot is live!
-📊 Database Schema
-🗨️ Chats Table
 
-CREATE TABLE chats (
+## 📊 Database Schema
+*🗨️ Chats Table*
+
+*CREATE TABLE chats (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT NOT NULL,
     user_message TEXT,
