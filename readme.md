@@ -104,10 +104,13 @@ That’s it — your chatbot is live!
 ---
 
 ## 📊 Database Schema
----
-*🗨️ Chats Table*
 
-*CREATE TABLE chats (
+---
+
+### 🗨️ Chats Table
+
+```sql
+CREATE TABLE chats (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT NOT NULL,
     user_message TEXT,
@@ -115,8 +118,8 @@ That’s it — your chatbot is live!
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-
- 🧑‍💻 Sessions Table
+🧑‍💻 Sessions Table
+sql
 
 CREATE TABLE sessions (
     session_id TEXT PRIMARY KEY,
