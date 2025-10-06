@@ -18,16 +18,16 @@
 
 ## 📁 Project Structure
 
-ecommerce_chatbot/
-├── app.py # Main Streamlit application
-├── database.py # SQLite database operations
-├── chatbot_core.py # Chatbot response logic
-├── utils.py # Text processing & rule-based responses
-├── models.py # ML model loading & embeddings
-├── requirements.txt # Python dependencies
-├── data/
-│ └── faq_with_intent.csv # Training data
-└── chat_history.db # Auto-generated database (not in repo)
+- ecommerce_chatbot/
+- ├── app.py # Main Streamlit application
+- ├── database.py # SQLite database operations
+- ├── chatbot_core.py # Chatbot response logic
+- ├── utils.py # Text processing & rule-based responses
+- ├── models.py # ML model loading & embeddings
+- ├── requirements.txt # Python dependencies
+- ├── data/
+- │ └── faq_with_intent.csv # Training data
+- └── chat_history.db # Auto-generated database (not in repo)
 
 
 ---
@@ -85,9 +85,10 @@ pip install -r requirements.txt
 streamlit run app.py
 
 ## 5️⃣ Open in browser
+---
 
 Visit http://localhost:8501
-bash```
+
 🎉
 ☁️ Streamlit Cloud Deployment
 
@@ -100,8 +101,10 @@ bash```
     Click Deploy 🚀
 
 That’s it — your chatbot is live!
+---
 
 ## 📊 Database Schema
+---
 *🗨️ Chats Table*
 
 *CREATE TABLE chats (
@@ -111,18 +114,20 @@ That’s it — your chatbot is live!
     bot_message TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+---
 
-🧑‍💻 Sessions Table
-
+## 🧑‍💻 Sessions Table
+---
 CREATE TABLE sessions (
     session_id TEXT PRIMARY KEY,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+---
 
-🧠 Technical Architecture
-⚙️ Response Pipeline
-
+## 🧠 Technical Architecture
+**⚙️ Response Pipeline**
+---
     Input Layer
 
         Text cleaning & normalization
@@ -144,85 +149,63 @@ CREATE TABLE sessions (
         Save user & bot messages to SQLite
 
         Track and update session data
+---
 
-🧬 Machine Learning Stack
-Component	Description
-Sentence Transformers	Semantic understanding
-Cosine Similarity	Query-to-response matching
-PySpellChecker	Error correction
-Thresholding	Confidence control
-🌟 Key Features in Action
+- 🧬 Machine Learning Stack
+- Component	Description
+- Sentence Transformers	Semantic understanding
+- Cosine Similarity	Query-to-response matching
+- PySpellChecker	Error correction
+- Thresholding	Confidence control
+- 🌟 Key Features in Action
 
-Example 1:
-User: how to clain warraenty
-→ Corrected: how to claim warranty
-→ Response: “Most products come with a standard manufacturer warranty 🧾...”
+---
+**📈 Performance Metrics**
+**Metric	Value**
+**⏱️ Response Time	< 2 seconds**
+**🎯 Accuracy	85%+**
+**🌐 Uptime	24/7**
+**🧍 Users	Multi-user support**
+**🔒 Privacy & Security**
 
-Example 2:
-User: good noght
-→ Corrected: good night
-→ Response: “Good night 🌙 Sleep well, champ!”
-🛍️ E-commerce Knowledge Base
+   - 🚫 No personal data stored
 
-Handles queries like:
+   -  🔐 Session isolation
 
-    📦 Returns & Refunds
+   -  💾 Local-only database
 
-    🚚 Shipping & Tracking
+   - ⚙️ No third-party data sharing
 
-    💳 Payment Issues
+**🤝 Contributing**
 
-    🧾 Warranty & Claims
+   - Fork the repo
 
-    💰 Offers & Discounts
+   - Create a new feature branch
 
-    ❌ Order Cancellations
+   - Commit your updates
 
-📈 Performance Metrics
-Metric	Value
-⏱️ Response Time	< 2 seconds
-🎯 Accuracy	85%+
-🌐 Uptime	24/7
-🧍 Users	Multi-user support
-🔒 Privacy & Security
+   - Push to your fork
 
-    🚫 No personal data stored
+   - Open a Pull Request 🚀
 
-    🔐 Session isolation
+**🙏 Acknowledgments**
 
-    💾 Local-only database
-
-    ⚙️ No third-party data sharing
-
-🤝 Contributing
-
-    Fork the repo
-
-    Create a new feature branch
-
-    Commit your updates
-
-    Push to your fork
-
-    Open a Pull Request 🚀
-
-🙏 Acknowledgments
-
-    Streamlit
+  - Streamlit
 
 — Amazing framework
 
-Sentence Transformers
+**Sentence Transformers**
 
 — Semantic search magic
 
-PySpellChecker
+**PySpellChecker**
 
 — Typo fixer
 
 SQLite
 
     — Lightweight DB
+---
 
 ⭐ If you found this helpful, give it a star!
 🐛 Found a bug? Open an issue
@@ -230,4 +213,4 @@ SQLite
 .
 💡 Have an idea? Let’s make it better together.
 
-Built with ❤️ and Python for smarter e-commerce support.
+***Built with ❤️ and Python for smarter e-commerce support.***
