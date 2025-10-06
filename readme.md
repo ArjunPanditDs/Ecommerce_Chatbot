@@ -124,8 +124,9 @@ CREATE TABLE sessions (
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
----
-🧠 Technical Architecture
+```
+
+### 🧠 Technical Architecture
 ⚙️ Response Pipeline
 
 Input Layer
