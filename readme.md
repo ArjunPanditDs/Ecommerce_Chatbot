@@ -126,7 +126,7 @@ CREATE TABLE sessions (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP
 );
----
+
 
 ## 🧠 Technical Architecture
 **⚙️ Response Pipeline**
